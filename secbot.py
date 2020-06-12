@@ -25,8 +25,10 @@ async def on_message(message):
     isUrl = re.match(regex, targetUrl)
     if isUrl:
         params = {'apikey': credentials.virusTotalToken, 'resource': targetUrl}
-        resp = requests.get(url, params)
-        data = resp.json()
+        try:
+            data = requests.get(url, params).json()
+        except: 
+            print('couldnt reach virustotal')
         result = "url: {0}, timestamp: {1}, result: {2}".format(data['url'], data['scan_date'], data['scans']['Avira']['result'])
         await message.channel.send(result)
 
