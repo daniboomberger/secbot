@@ -5,7 +5,7 @@ import re
 import credentials
 
 
-url = 'https://www.virustotal.com/vtapi/v2/url/report'
+checking_URL = 'https://www.virustotal.com/vtapi/v2/url/report'
 discordClient = discord.Client()
 
 dictionary = dict()
@@ -21,15 +21,25 @@ async def on_ready():
 
 @discordClient.event
 async def on_message(message):
-    targetUrl = message.content
-    isUrl = re.match(regex, targetUrl)
+    splitted_message = message.content.split(' ')
+    for i in range(len(splitted_message)):    
+        result = handleMessage(splitted_message[i])
+        if result != None:
+            await message.channel.send(f"detected: {result}")
+
+def handleMessage(message_content):
+    isUrl = re.match(regex, message_content)
     if isUrl:
-        params = {'apikey': credentials.virusTotalToken, 'resource': targetUrl}
-        try:
-            data = requests.get(url, params).json()
-        except: 
-            print('couldnt reach virustotal')
-        result = "url: {0}, timestamp: {1}, result: {2}".format(data['url'], data['scan_date'], data['scans']['Avira']['result'])
-        await message.channel.send(result)
+        params = {'apikey': credentials.virusTotalToken, 'resource': message_content}
+        result = getVirusTotalData(checking_URL, params)
+        return result  
+
+def getVirusTotalData(url, params):
+    try:
+        data = requests.get(url, params).json()
+        return data['positives']
+    except: 
+        print('couldnt reach virustotal')
+
 
 discordClient.run(credentials.discordToken)
